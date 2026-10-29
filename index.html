@@ -634,7 +634,7 @@
 
           </span>
 
-          <input type="file" id="sheetInput" accept="image/png,image/webp,image/gif,image/jpeg">
+          <input type="file" id="sheetInput" accept="image/*">
 
         </label>
 
@@ -665,7 +665,7 @@
 
           </span>
 
-          <input type="file" id="overlayInput" accept="image/png,image/webp,image/gif,image/jpeg">
+          <input type="file" id="overlayInput" accept="image/*">
 
         </label>
 
@@ -1044,10 +1044,6 @@
 
       g.drawImage(src, 0, 0);
 
-      const last = lastFilledCell(g, cols, rows);
-
-      if (last < 0) throw new Error('Every cell in that sheet is transparent.');
-
       const framesToUse = 45
 
       Object.assign(S, {
@@ -1185,83 +1181,204 @@
     }
 
 
-
     /* ---------- files ---------- */
 
     function loadImage(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) {
+          reject(new Error('No file was selected.'));
+          return;
+        }
 
-      return new Promise((res, rej) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
 
-        const u = URL.createObjectURL(file), im = new Image();
+        const cleanup = () => {
+          URL.revokeObjectURL(url);
+          img.onload = null;
+          img.onerror = null;
+        };
 
-        im.onload = () => {URL.revokeObjectURL(u); res(im);};
+        img.onload = () => {
+          const validDimensions = img.naturalWidth > 0 && img.naturalHeight > 0;
 
-        im.onerror = () => {URL.revokeObjectURL(u); rej(new Error('That file could not be read as an image.'));};
+          cleanup();
 
-        im.src = u;
+          if (!validDimensions) {
+            reject(new Error('The selected image has invalid dimensions.'));
+            return;
+          }
 
+          resolve(img);
+        };
+
+        img.onerror = () => {
+          cleanup();
+          reject(
+            new Error(
+              'Could not open this image. Try selecting a PNG, JPEG, or WebP file.'
+            )
+          );
+        };
+
+        img.src = url;
       });
-
     }
 
     function wireDrop(label, input, handler) {
+      // Drag-and-drop support
+      ['dragenter', 'dragover'].forEach((eventName) => {
+        label.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          label.classList.add('over');
+        });
+      });
 
-      ['dragenter', 'dragover'].forEach((e) => label.addEventListener(e, (ev) => {ev.preventDefault(); label.classList.add('over');}));
+      ['dragleave', 'drop'].forEach((eventName) => {
+        label.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          label.classList.remove('over');
+        });
+      });
 
-      ['dragleave', 'drop'].forEach((e) => label.addEventListener(e, (ev) => {ev.preventDefault(); label.classList.remove('over');}));
+      label.addEventListener('drop', async (event) => {
+        const file = event.dataTransfer?.files?.[0];
 
-      label.addEventListener('drop', (ev) => {const f = ev.dataTransfer && ev.dataTransfer.files[0]; if (f) handler(f);});
+        if (file) {
+          try {
+            await handler(file);
+          } catch (error) {
+            console.error('Dropped-file import failed:', error);
+          }
+        }
+      });
 
-      input.addEventListener('change', () => {const f = input.files[0]; if (f) handler(f); input.value = '';});
+      // File picker support, including better diagnostics for iOS Safari
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
 
+        if (!file) {
+          console.warn('File picker closed without returning a file.');
+          return;
+        }
+
+        console.log('Selected file:', {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        });
+
+        try {
+          await handler(file);
+        } catch (error) {
+          console.error('File import failed:', error);
+        } finally {
+          // Reset only after processing so the same file can be selected again.
+          input.value = '';
+        }
+      });
+
+      // Diagnostic only; support varies between browsers.
+      input.addEventListener('cancel', () => {
+        console.info('File picker cancelled or returned no selection.');
+      });
     }
 
+    // Sprite sheet import
     wireDrop($('sheetDrop'), $('sheetInput'), async (file) => {
-
-      try {const img = await loadImage(file); setSheet(img, file.name, false); note('sheetErr', '', false);}
-
-      catch (e) {note('sheetErr', e.message, true);}
-
-    });
-
-    wireDrop($('overlayDrop'), $('overlayInput'), async (file) => {
-
       try {
+        const img = await loadImage(file);
 
-        const img = await loadImage(file); setOverlay(img, file.name, false); note('overlayErr', '', false);
-
-        if (!S.nameTouched) {$('fileName').value = file.name.replace(/\.[^.]+$/, '').replace(/[^\w\- ]+/g, '') + '.webp';}
-
-      } catch (e) {note('overlayErr', e.message, true);}
-
+        setSheet(img, file.name, false);
+        note('sheetErr', '', false);
+      } catch (error) {
+        console.error('Sprite sheet import error:', error);
+        note(
+          'sheetErr',
+          error.message || 'Could not import the sprite sheet.',
+          true
+        );
+      }
     });
 
-    $('removeOverlay').addEventListener('click', () => {setOverlay(null, '', false);});
+    // Overlay image import
+    wireDrop($('overlayDrop'), $('overlayInput'), async (file) => {
+      try {
+        const img = await loadImage(file);
 
-    $('showOverlay').addEventListener('change', (e) => {S.showOverlay = e.target.checked; invalidate(); render();});
+        setOverlay(img, file.name, false);
+        note('overlayErr', '', false);
 
-    $('fileName').addEventListener('input', () => {S.nameTouched = true;});
+        if (!S.nameTouched) {
+          $('fileName').value =
+            file.name
+              .replace(/\.[^.]+$/, '')
+              .replace(/[^\w\- ]+/g, '') + '.webp';
+        }
+      } catch (error) {
+        console.error('Overlay import error:', error);
+        note(
+          'overlayErr',
+          error.message || 'Could not import the overlay image.',
+          true
+        );
+      }
+    });
 
+    $('removeOverlay').addEventListener('click', () => {
+      setOverlay(null, '', false);
+    });
+
+    $('showOverlay').addEventListener('change', (event) => {
+      S.showOverlay = event.target.checked;
+      invalidate();
+      render();
+    });
+
+    $('fileName').addEventListener('input', () => {
+      S.nameTouched = true;
+    });
 
 
     /* ---------- controls ---------- */
 
-    function setFps(v) {
+    function setFps(value) {
+      const parsed = Number(value);
+      const n = Math.min(
+        60,
+        Math.max(
+          1,
+          Number.isFinite(parsed) && parsed > 0 ? parsed : S.fps
+        )
+      );
 
-      const parsed = Number(v);
-      const n = Math.min(60, Math.max(1, Number.isFinite(parsed) && parsed > 0 ? parsed : S.fps));
+      S.fps = n;
+      $('fps').value = n;
+      $('fpsNum').value = n;
 
-      S.fps = n; $('fps').value = n; $('fpsNum').value = n; refreshTiming(); invalidate();
-
+      refreshTiming();
+      invalidate();
     }
 
-    $('fps').addEventListener('input', (e) => setFps(e.target.value));
+    $('fps').addEventListener('input', (event) => {
+      setFps(event.target.value);
+    });
 
-    $('fpsNum').addEventListener('change', (e) => setFps(e.target.value));
+    $('fpsNum').addEventListener('change', (event) => {
+      setFps(event.target.value);
+    });
 
-    $('play').addEventListener('click', () => {S.playing = !S.playing; syncPlay();});
+    $('play').addEventListener('click', () => {
+      S.playing = !S.playing;
+      syncPlay();
+    });
 
-    $('scrub').addEventListener('input', (e) => {S.playing = false; S.idx = Number(e.target.value); syncPlay(); render();});
+    $('scrub').addEventListener('input', (event) => {
+      S.playing = false;
+      S.idx = Number(event.target.value);
+      syncPlay();
+      render();
+    });
 
 
 
@@ -1393,7 +1510,7 @@
 
     $('resetDefaults').addEventListener('click', () => {
       setFps(14.29);
-      $('quality').value = '0.98';
+      $('quality').value = '0.1';
       $('fileName').value = 'sprite-loop.webp';
       S.nameTouched = false;
       S.showOverlay = true;
