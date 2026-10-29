@@ -1080,7 +1080,7 @@
 
       note('sheetWarn', off ? 'The sheet is not an exact multiple of 256 px. Pixels past the last full cell are ignored.' : '', true);
 
-      const cnt = $('count'); cnt.max = S.cells; cnt.value = S.count;
+      const cnt = $('count'); cnt.max = Math.min(45, S.cells); cnt.value = Math.min(45, S.count);
 
       const sc = $('scrub'); sc.max = Math.max(0, S.count - 1);
 
