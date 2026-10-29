@@ -1056,8 +1056,20 @@
 
       if (last < 0) throw new Error('Every cell in that sheet is transparent.');
 
-      Object.assign(S, {sheet: c, cols, rows, cells: cols * rows, detected: last + 1, count: last + 1, idx: 0, sheetName: name, sheetDims: [w, h], sheetSample: sample});
+      const framesToUse = Math.min(45, cols * rows);
 
+      Object.assign(S, {
+        sheet: c,
+        cols,
+        rows,
+        cells: cols * rows,
+        detected: last + 1,
+        count: framesToUse,
+        idx: 0,
+        sheetName: name,
+        sheetDims: [w, h],
+        sheetSample: sample
+      });
       thumb($('sheetThumb'), c);
 
       refreshSheetUI(); buildCellMap(); invalidate(); render();
