@@ -1,0 +1,1424 @@
+<title>Sprite Loop WebP</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght\@12..96,600;12..96,700&family=IBM+Plex+Sans:wght\@400;500;600&family=IBM+Plex+Mono:wght\@400;500&display=swap">
+
+<style>
+  :root {
+
+    --bg: #eceff3;
+
+    --panel: #f8f9fb;
+
+    --ink: #121a24;
+
+    --muted: #566272;
+
+    --line: #cfd6df;
+
+    --accent: #2b59d9;
+
+    --accent-ink: #ffffff;
+
+    --ok: #17794a;
+
+    --warn: #9a5400;
+
+    --err: #b3261e;
+
+    --check-a: #dde2e9;
+
+    --check-b: #f1f3f7;
+
+    --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+
+    --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  }
+
+  @media (prefers-color-scheme: dark) {
+
+    :root:not([data-theme="light"]) {
+
+      --bg: #10151c;
+      --panel: #171e27;
+      --ink: #e7ecf3;
+      --muted: #93a0b2;
+      --line: #2b3646;
+
+      --accent: #7ea2ff;
+      --accent-ink: #0b1220;
+      --ok: #5ed39a;
+      --warn: #f0b35a;
+      --err: #ff8a80;
+
+      --check-a: #1d2530;
+      --check-b: #262f3c;
+      color-scheme: dark;
+
+    }
+
+  }
+
+  :root[data-theme="dark"] {
+
+    --bg: #10151c;
+    --panel: #171e27;
+    --ink: #e7ecf3;
+    --muted: #93a0b2;
+    --line: #2b3646;
+
+    --accent: #7ea2ff;
+    --accent-ink: #0b1220;
+    --ok: #5ed39a;
+    --warn: #f0b35a;
+    --err: #ff8a80;
+
+    --check-a: #1d2530;
+    --check-b: #262f3c;
+    color-scheme: dark;
+
+  }
+
+
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+
+    background: var(--bg);
+
+    color: var(--ink);
+
+    font: 15px/1.5 var(--f-body);
+
+    padding-block: 28px 56px;
+
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+
+  }
+
+  .wrap {
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 26px;
+  }
+
+  h1 {
+
+    font: 700 clamp(1.8rem, 3.2vw, 2.4rem)/1.05 var(--f-display);
+
+    letter-spacing: -0.02em;
+
+    margin: 0 0 8px;
+
+    text-wrap: balance;
+
+  }
+
+  header p {
+    margin: 0;
+    color: var(--muted);
+    max-width: 58ch;
+  }
+
+  h2 {
+
+    font: 600 1.02rem/1.2 var(--f-display);
+
+    letter-spacing: -0.005em;
+
+    margin: 0;
+
+  }
+
+  .mono {
+    font-family: var(--f-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+
+
+  .app {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+    gap: 32px;
+    align-items: start;
+  }
+
+  @media (min-width: 861px) {
+
+    .stage {
+      position: sticky;
+      top: calc(16px + env(safe-area-inset-top, 0px));
+    }
+
+  }
+
+  @media (max-width: 860px) {
+    .app {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+    }
+  }
+
+
+
+  .stage {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .viewport {
+
+    width: min(100%, 512px);
+
+    aspect-ratio: 1;
+
+    border: 1px solid var(--line);
+
+    border-radius: 6px;
+
+    overflow: hidden;
+
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 24px 24px;
+
+  }
+
+  .viewport canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .transport {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: min(100%, 512px);
+  }
+
+  .transport input[type="range"] {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .transport output {
+    min-width: 5.5ch;
+    text-align: right;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+
+
+  .mapwrap {
+    width: min(100%, 512px);
+    display: grid;
+    gap: 8px;
+  }
+
+  .mapnote {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .cellmap {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr));
+    gap: 4px;
+    max-width: calc(var(--cols, 7) * 26px);
+  }
+
+  .cell {
+
+    aspect-ratio: 1;
+    padding: 0;
+    border-radius: 3px;
+    cursor: pointer;
+
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+
+  }
+
+  .cell.on {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .cell.off {
+    background: transparent;
+    border: 1px dashed var(--line);
+    cursor: default;
+  }
+
+
+
+  .controls {
+    display: grid;
+    gap: 22px;
+    min-width: 0;
+  }
+
+  .group {
+    display: grid;
+    gap: 10px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    min-width: 0;
+  }
+
+  .group:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+
+
+  .drop {
+
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+
+    border: 1.5px dashed var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+
+    cursor: pointer;
+    min-width: 0;
+
+  }
+
+  .drop:hover,
+  .drop.over {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+  }
+
+  .drop:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .drop input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+  }
+
+  .thumb {
+
+    flex: none;
+    width: 64px;
+    height: 64px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 12px 12px;
+
+  }
+
+  .droptext {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  .droptext strong {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .droptext span {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .tag {
+
+    display: inline-block;
+    font: 500 11px/1 var(--f-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+
+    padding: 3px 6px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--warn) 16%, transparent);
+    color: var(--warn);
+
+    margin-left: 6px;
+    vertical-align: 1px;
+
+  }
+
+  .note {
+    margin: 0;
+    font-size: 13px;
+  }
+
+  .note.warn {
+    color: var(--warn);
+  }
+
+  .note.err {
+    color: var(--err);
+  }
+
+  .note.ok {
+    color: var(--ok);
+  }
+
+
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .row.fps {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 5.5rem auto;
+  }
+
+  .field {
+    display: grid;
+    gap: 4px;
+  }
+
+  .field label,
+  .lbl {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  input[type="range"] {
+    accent-color: var(--accent);
+    width: 100%;
+  }
+
+  input[type="number"],
+  input[type="text"],
+  select {
+
+    font: inherit;
+    color: var(--ink);
+    background: var(--panel);
+
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    min-height: 38px;
+    padding: 0 10px;
+    min-width: 0;
+    width: 100%;
+
+  }
+
+  input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+  }
+
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  @media (max-width: 420px) {
+    .two {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+
+
+  .btn {
+
+    font: 500 15px/1 var(--f-body);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 8px;
+    cursor: pointer;
+
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+
+  }
+
+  .btn:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    min-height: 46px;
+    font-weight: 600;
+  }
+
+  .btn.small {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  progress {
+    width: 100%;
+    height: 8px;
+    accent-color: var(--accent);
+  }
+
+
+
+  .result {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+  }
+
+  .result .out {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .result img {
+
+    flex: none;
+    width: 112px;
+    height: 112px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 14px 14px;
+
+  }
+
+  .stats {
+    display: grid;
+    gap: 2px;
+    font-size: 13px;
+    color: var(--muted);
+    min-width: 0;
+  }
+
+  .stats strong {
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      scroll-behavior: auto !important;
+      transition: none !important;
+    }
+  }
+</style>
+
+
+
+<div class="wrap">
+
+  <header>
+
+    <h1>Chromify's WebP Tool</h1>
+
+    <p>Slice a 256 px sprite sheet into frames, lay your own 256 px image on top, and export one looping animated WebP.
+    </p>
+
+  </header>
+
+
+
+  <main class="app">
+
+    <section class="stage" aria-label="Preview">
+
+      <div class="viewport"><canvas id="view" width="256" height="256" aria-label="Animation preview"></canvas></div>
+
+      <div class="transport">
+
+        <button class="btn small" id="play" type="button" style="min-width:76px">Pause</button>
+
+        <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Frame">
+
+        <output id="frameLabel" class="mono" for="scrub">1 / 1</output>
+
+      </div>
+
+      <div class="mapwrap">
+
+        <p class="mapnote" id="mapNote"></p>
+
+        <div class="cellmap" id="cellmap" role="group" aria-label="Sheet cells"></div>
+
+      </div>
+
+    </section>
+
+
+
+    <section class="controls" aria-label="Settings">
+
+      <div class="group">
+
+        <h2>Sprite sheet</h2>
+
+        <label class="drop" id="sheetDrop" for="sheetInput">
+
+          <canvas class="thumb" id="sheetThumb" width="64" height="64"></canvas>
+
+          <span class="droptext">
+
+            <strong id="sheetName">Choose or drop a sheet</strong>
+
+            <span id="sheetMeta"></span>
+
+          </span>
+
+          <input type="file" id="sheetInput" accept="image/png,image/webp,image/gif,image/jpeg">
+
+        </label>
+
+        <p class="note warn" id="sheetWarn" hidden></p>
+
+        <p class="note err" id="sheetErr" hidden></p>
+
+        <p class="hint">Every frame is 256 × 256. Cells are read left to right, then top to bottom. Empty cells at the
+          end are skipped.</p>
+
+        <div class="field">
+
+          <label for="count">Frames to use</label>
+
+          <input type="number" id="count" min="1" max="1" value="1" inputmode="numeric">
+
+        </div>
+
+      </div>
+
+
+
+      <div class="group">
+
+        <h2>Overlay image</h2>
+
+        <label class="drop" id="overlayDrop" for="overlayInput">
+
+          <canvas class="thumb" id="overlayThumb" width="64" height="64"></canvas>
+
+          <span class="droptext">
+
+            <strong id="overlayName">Choose or drop an image</strong>
+
+            <span id="overlayMeta"></span>
+
+          </span>
+
+          <input type="file" id="overlayInput" accept="image/png,image/webp,image/gif,image/jpeg">
+
+        </label>
+
+        <p class="note err" id="overlayErr" hidden></p>
+
+        <div class="row">
+
+          <label class="check"><input type="checkbox" id="showOverlay" checked> Place it on top of every frame</label>
+
+          <button class="btn small" id="removeOverlay" type="button">Remove</button>
+
+        </div>
+
+        <p class="hint">A 256 × 256 PNG or WebP with a transparent background works best. Other sizes are fitted inside
+          256 × 256.</p>
+
+      </div>
+
+
+
+      <div class="group">
+
+        <h2>Speed</h2>
+
+        <div class="row fps">
+
+          <input type="range" id="fps" min="1" max="60" step="0.01" value="14.29" aria-label="Frames per second">
+
+          <input type="number" id="fpsNum" min="1" max="60" step="0.01" value="14.29" inputmode="numeric"
+            aria-label="Frames per second, exact">
+
+          <span class="lbl">fps</span>
+
+        </div>
+
+        <p class="hint mono" id="timing"></p>
+
+      </div>
+
+
+
+      <div class="group">
+
+        <h2>Export</h2>
+
+        <div class="two">
+
+          <div class="field">
+
+            <label for="quality">Quality</label>
+
+            <select id="quality">
+
+              <option value="1" selected>Lossless (100%)</option>
+
+              <option value="0.92">High (92%)</option>
+
+              <option value="0.8">Balanced (80%)</option>
+
+              <option value="0.5">Compressed (50%)</option>
+
+              <option value="0.3">DANGER ZONE!!! (30%)</option>
+
+
+            </select>
+
+          </div>
+
+          <div class="field">
+
+            <label for="fileName">File name</label>
+
+            <input type="text" id="fileName" value="sprite-loop.webp" spellcheck="false" autocomplete="off">
+
+          </div>
+
+        </div>
+
+        <p class="hint">The file loops forever and keeps transparency. Extra quality uses a near-maximum WebP encoder
+          setting to help retain detail through later social-media recompression; platforms may still recompress it.</p>
+        <button class="btn small" id="resetDefaults" type="button">Reset back to default</button>
+
+        <button class="btn primary" id="build" type="button">Build animated WebP</button>
+
+        <progress id="prog" max="1" value="0" hidden></progress>
+
+        <p class="note" id="buildMsg" role="status" aria-live="polite" hidden></p>
+
+
+
+        <div class="result" id="result" hidden>
+
+          <div class="out">
+
+            <img id="outImg" alt="The finished animated WebP" width="112" height="112">
+
+            <div class="stats">
+
+              <strong id="outName">sprite-loop.webp</strong>
+
+              <span class="mono" id="outStats"></span>
+
+              <span>256 × 256 · loops forever</span>
+
+            </div>
+
+          </div>
+
+          <button class="btn" id="save" type="button">Save WebP file</button>
+
+          <p class="note" id="saveMsg" role="status" aria-live="polite" hidden></p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+
+<script>
+
+  /*<mux>*/
+
+  function u24(v) {return [v & 255, (v >> 8) & 255, (v >> 16) & 255];}
+
+  function u32(v) {return [v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >>> 24) & 255];}
+
+  function fourcc(b, o) {return String.fromCharCode(b[o], b[o + 1], b[o + 2], b[o + 3]);}
+
+  function rd32(b, o) {return (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;}
+
+  function cat(list) {
+
+    let n = 0; for (const a of list) n += a.length;
+
+    const out = new Uint8Array(n); let p = 0;
+
+    for (const a of list) {out.set(a, p); p += a.length;}
+
+    return out;
+
+  }
+
+  function mkChunk(tag, payload) {
+
+    const pad = payload.length & 1;
+
+    const out = new Uint8Array(8 + payload.length + pad);
+
+    for (let i = 0; i < 4; i++) out[i] = tag.charCodeAt(i);
+
+    out.set(u32(payload.length), 4);
+
+    out.set(payload, 8);
+
+    return out;
+
+  }
+
+  /* Pull the image chunks (ALPH, VP8, VP8L) out of a single-image WebP file. */
+
+  function imageChunks(buf) {
+
+    if (buf.length < 20 || fourcc(buf, 0) !== 'RIFF' || fourcc(buf, 8) !== 'WEBP') throw new Error('The encoder returned something that is not a WebP file.');
+
+    const keep = []; let o = 12;
+
+    while (o + 8 <= buf.length) {
+
+      const tag = fourcc(buf, o), size = rd32(buf, o + 4), end = o + 8 + size;
+
+      if (end > buf.length) break;
+
+      if (tag === 'ALPH' || tag === 'VP8 ' || tag === 'VP8L') keep.push(mkChunk(tag, buf.subarray(o + 8, end)));
+
+      o = end + (size & 1);
+
+    }
+
+    if (!keep.some((c) => {const t = fourcc(c, 0); return t === 'VP8 ' || t === 'VP8L';})) throw new Error('A frame had no image data.');
+
+    return keep;
+
+  }
+
+  function muxAnimatedWebP(frames, opt) {
+
+    const w = opt.width, h = opt.height, dur = Math.min(0xFFFFFF, Math.max(1, opt.duration | 0)), loops = opt.loops | 0;
+
+    const vp8x = mkChunk('VP8X', new Uint8Array([0x12, 0, 0, 0, ...u24(w - 1), ...u24(h - 1)]));
+
+    const anim = mkChunk('ANIM', new Uint8Array([0, 0, 0, 0, loops & 255, (loops >> 8) & 255]));
+
+    const anmfs = frames.map((f) => {
+
+      const head = new Uint8Array([...u24(0), ...u24(0), ...u24(w - 1), ...u24(h - 1), ...u24(dur), 0x02]);
+
+      return mkChunk('ANMF', cat([head, ...imageChunks(f)]));
+
+    });
+
+    const body = cat([new Uint8Array([0x57, 0x45, 0x42, 0x50]), vp8x, anim, ...anmfs]);
+
+    const riff = new Uint8Array(8);
+
+    riff.set([0x52, 0x49, 0x46, 0x46], 0); riff.set(u32(body.length), 4);
+
+    return cat([riff, body]);
+
+  }
+
+  /*</mux>*/
+
+
+
+  (function () {
+
+    const FRAME = 256;
+
+    const $ = (id) => document.getElementById(id);
+
+    const view = $('view'), vctx = view.getContext('2d');
+
+    const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const S = {
+
+      sheet: null, cols: 0, rows: 0, cells: 0, count: 0, detected: 0, sheetName: '', sheetDims: [0, 0], sheetSample: false,
+
+      overlay: null, overlayName: '', overlayDims: [0, 0], overlaySample: false, showOverlay: true,
+
+      fps: 14.29, playing: !reduce, idx: 0, cellEls: [], nameTouched: false, result: null, resultUrl: null, busy: false
+
+    };
+
+    const durMs = () => Math.max(1, Math.round(1000 / S.fps));
+
+
+
+    function drawContain(ctx, img, w, h) {
+
+      const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+
+      const s = Math.min(w / iw, h / ih), dw = iw * s, dh = ih * s;
+
+      ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+
+    }
+
+    function paintFrame(ctx, i, withOverlay) {
+
+      ctx.clearRect(0, 0, FRAME, FRAME);
+
+      if (S.sheet) ctx.drawImage(S.sheet, (i % S.cols) * FRAME, Math.floor(i / S.cols) * FRAME, FRAME, FRAME, 0, 0, FRAME, FRAME);
+
+      if (withOverlay && S.overlay) drawContain(ctx, S.overlay, FRAME, FRAME);
+
+    }
+
+    function thumb(canvasEl, src) {
+
+      const g = canvasEl.getContext('2d'); g.clearRect(0, 0, 64, 64);
+
+      if (src) drawContain(g, src, 64, 64);
+
+    }
+
+    function note(id, text, show) {const el = $(id); el.textContent = text || ''; el.hidden = !show || !text;}
+
+
+
+    /* ---------- sample content, replaced as soon as real files are chosen ---------- */
+
+    function sampleSheet() {
+
+      const cols = 7, n = 45, c = document.createElement('canvas');
+
+      c.width = c.height = cols * FRAME;
+
+      const g = c.getContext('2d');
+
+      for (let i = 0; i < n; i++) {
+
+        const p = i / n, x = 34, y = 14, w = 188, h = 228, r = 14;
+
+        g.save(); g.translate((i % cols) * FRAME, Math.floor(i / cols) * FRAME);
+
+        g.save(); g.beginPath(); g.roundRect(x, y, w, h, r); g.clip();
+
+        const bg = g.createLinearGradient(0, y, 0, y + h);
+
+        bg.addColorStop(0, '#1b1233'); bg.addColorStop(0.6, '#4a2377'); bg.addColorStop(1, '#12091f');
+
+        g.fillStyle = bg; g.fillRect(x, y, w, h);
+
+        const a = p * Math.PI * 2, mx = 128 + Math.cos(a) * 34, my = 100 + Math.sin(a) * 16;
+
+        const m = g.createRadialGradient(mx, my, 4, mx, my, 70);
+
+        m.addColorStop(0, '#ffe29a'); m.addColorStop(0.35, '#ff9a2e'); m.addColorStop(1, 'rgba(255,120,30,0)');
+
+        g.fillStyle = m; g.fillRect(x, y, w, h);
+
+        g.restore();
+
+        const k = 0.14 + ((p * 2) % 1) * 0.72;
+
+        const s = g.createLinearGradient(x, y, x + w, y + h);
+
+        s.addColorStop(0, '#8a5a12'); s.addColorStop(k - 0.12, '#b98a2c'); s.addColorStop(k, '#ffe9a8'); s.addColorStop(k + 0.12, '#b98a2c'); s.addColorStop(1, '#8a5a12');
+
+        g.lineWidth = 7; g.strokeStyle = s; g.beginPath(); g.roundRect(x, y, w, h, r); g.stroke();
+
+        g.restore();
+
+      }
+
+      return c;
+
+    }
+
+    function sampleOverlay() {
+
+      const c = document.createElement('canvas'); c.width = c.height = FRAME;
+
+      const g = c.getContext('2d');
+
+      g.fillStyle = 'rgba(240,244,252,0.94)';
+
+      g.beginPath(); g.arc(128, 104, 34, 0, Math.PI * 2); g.fill();
+
+      g.beginPath(); g.ellipse(128, 218, 66, 74, 0, Math.PI, Math.PI * 2); g.closePath(); g.fill();
+
+      g.fillStyle = '#1b1233'; g.font = '600 13px "IBM Plex Mono", ui-monospace, monospace'; g.textAlign = 'center';
+
+      g.fillText('SAMPLE', 128, 226);
+
+      return c;
+
+    }
+
+
+
+    /* ---------- sheet ---------- */
+
+    function lastFilledCell(g, cols, rows) {
+
+      for (let i = cols * rows - 1; i >= 0; i--) {
+
+        const d = g.getImageData((i % cols) * FRAME, Math.floor(i / cols) * FRAME, FRAME, FRAME).data;
+
+        for (let p = 3; p < d.length; p += 4) if (d[p]) return i;
+
+      }
+
+      return -1;
+
+    }
+
+    function setSheet(src, name, sample) {
+
+      const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+
+      const cols = Math.floor(w / FRAME), rows = Math.floor(h / FRAME);
+
+      if (!cols || !rows) throw new Error('That image is ' + w + ' × ' + h + ' px. A sheet needs at least one 256 × 256 frame.');
+
+      const c = document.createElement('canvas'); c.width = cols * FRAME; c.height = rows * FRAME;
+
+      const g = c.getContext('2d', {willReadFrequently: true});
+
+      g.drawImage(src, 0, 0);
+
+      const last = lastFilledCell(g, cols, rows);
+
+      if (last < 0) throw new Error('Every cell in that sheet is transparent.');
+
+      Object.assign(S, {sheet: c, cols, rows, cells: cols * rows, detected: last + 1, count: last + 1, idx: 0, sheetName: name, sheetDims: [w, h], sheetSample: sample});
+
+      thumb($('sheetThumb'), c);
+
+      refreshSheetUI(); buildCellMap(); invalidate(); render();
+
+    }
+
+    function refreshSheetUI() {
+
+      const nameEl = $('sheetName');
+
+      nameEl.textContent = S.sheetName;
+
+      if (S.sheetSample) {const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Sample'; nameEl.appendChild(t);}
+
+      const skipped = S.cells - S.count;
+
+      $('sheetMeta').textContent = S.sheetDims[0] + ' × ' + S.sheetDims[1] + ' px · ' + S.cols + ' × ' + S.rows + ' cells · ' + S.count + ' frames' + (skipped > 0 ? ', ' + skipped + ' skipped' : '');
+
+      const off = S.sheetDims[0] % FRAME || S.sheetDims[1] % FRAME;
+
+      note('sheetWarn', off ? 'The sheet is not an exact multiple of 256 px. Pixels past the last full cell are ignored.' : '', true);
+
+      const cnt = $('count'); cnt.max = S.cells; cnt.value = S.count;
+
+      const sc = $('scrub'); sc.max = Math.max(0, S.count - 1);
+
+      $('mapNote').textContent = S.count + ' of ' + S.cells + ' cells used' + (S.cells > S.count ? ' · the last ' + (S.cells - S.count) + ' skipped' : '');
+
+      refreshTiming();
+
+    }
+
+    function buildCellMap() {
+
+      const m = $('cellmap'); m.textContent = ''; m.style.setProperty('--cols', S.cols); S.cellEls = [];
+
+      for (let i = 0; i < S.cells; i++) {
+
+        const b = document.createElement('button');
+
+        b.type = 'button'; b.className = 'cell' + (i < S.count ? '' : ' off'); b.disabled = i >= S.count;
+
+        b.setAttribute('aria-label', 'Frame ' + (i + 1));
+
+        b.addEventListener('click', () => {S.playing = false; S.idx = i; syncPlay(); render();});
+
+        m.appendChild(b); S.cellEls.push(b);
+
+      }
+
+    }
+
+
+
+    /* ---------- overlay ---------- */
+
+    function setOverlay(src, name, sample) {
+
+      const w = src ? (src.naturalWidth || src.width) : 0, h = src ? (src.naturalHeight || src.height) : 0;
+
+      Object.assign(S, {overlay: src, overlayName: name, overlayDims: [w, h], overlaySample: sample});
+
+      thumb($('overlayThumb'), src);
+
+      const nameEl = $('overlayName');
+
+      nameEl.textContent = src ? name : 'Choose or drop an image';
+
+      if (src && sample) {const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Sample'; nameEl.appendChild(t);}
+
+      $('overlayMeta').textContent = src ? w + ' × ' + h + ' px' + (w === FRAME && h === FRAME ? '' : ' · fitted into 256 × 256') : 'No overlay';
+
+      $('removeOverlay').disabled = !src;
+
+      invalidate(); render();
+
+    }
+
+
+
+    /* ---------- playback ---------- */
+
+    function syncPlay() {$('play').textContent = S.playing ? 'Pause' : 'Play';}
+
+    function render() {
+
+      paintFrame(vctx, S.idx, S.showOverlay);
+
+      $('frameLabel').textContent = (S.idx + 1) + ' / ' + S.count;
+
+      $('scrub').value = S.idx;
+
+      for (let i = 0; i < S.cellEls.length; i++) S.cellEls[i].classList.toggle('on', i === S.idx);
+
+    }
+
+    function refreshTiming() {
+
+      const d = durMs();
+
+      $('timing').textContent = d + ' ms per frame · loop lasts ' + ((S.count * d) / 1000).toFixed(2) + ' s';
+
+    }
+
+    let last = performance.now(), acc = 0;
+
+    function tick(t) {
+
+      const dt = t - last; last = t;
+
+      if (S.playing && S.sheet && S.count > 1) {
+
+        acc += Math.min(dt, 1000);
+
+        const step = durMs();
+
+        if (acc >= step) {const n = Math.floor(acc / step); acc -= n * step; S.idx = (S.idx + n) % S.count; render();}
+
+      }
+
+      requestAnimationFrame(tick);
+
+    }
+
+
+
+    /* ---------- files ---------- */
+
+    function loadImage(file) {
+
+      return new Promise((res, rej) => {
+
+        const u = URL.createObjectURL(file), im = new Image();
+
+        im.onload = () => {URL.revokeObjectURL(u); res(im);};
+
+        im.onerror = () => {URL.revokeObjectURL(u); rej(new Error('That file could not be read as an image.'));};
+
+        im.src = u;
+
+      });
+
+    }
+
+    function wireDrop(label, input, handler) {
+
+      ['dragenter', 'dragover'].forEach((e) => label.addEventListener(e, (ev) => {ev.preventDefault(); label.classList.add('over');}));
+
+      ['dragleave', 'drop'].forEach((e) => label.addEventListener(e, (ev) => {ev.preventDefault(); label.classList.remove('over');}));
+
+      label.addEventListener('drop', (ev) => {const f = ev.dataTransfer && ev.dataTransfer.files[0]; if (f) handler(f);});
+
+      input.addEventListener('change', () => {const f = input.files[0]; if (f) handler(f); input.value = '';});
+
+    }
+
+    wireDrop($('sheetDrop'), $('sheetInput'), async (file) => {
+
+      try {const img = await loadImage(file); setSheet(img, file.name, false); note('sheetErr', '', false);}
+
+      catch (e) {note('sheetErr', e.message, true);}
+
+    });
+
+    wireDrop($('overlayDrop'), $('overlayInput'), async (file) => {
+
+      try {
+
+        const img = await loadImage(file); setOverlay(img, file.name, false); note('overlayErr', '', false);
+
+        if (!S.nameTouched) {$('fileName').value = file.name.replace(/\.[^.]+$/, '').replace(/[^\w\- ]+/g, '') + '.webp';}
+
+      } catch (e) {note('overlayErr', e.message, true);}
+
+    });
+
+    $('removeOverlay').addEventListener('click', () => {setOverlay(null, '', false);});
+
+    $('showOverlay').addEventListener('change', (e) => {S.showOverlay = e.target.checked; invalidate(); render();});
+
+    $('fileName').addEventListener('input', () => {S.nameTouched = true;});
+
+
+
+    /* ---------- controls ---------- */
+
+    function setFps(v) {
+
+      const parsed = Number(v);
+      const n = Math.min(60, Math.max(1, Number.isFinite(parsed) && parsed > 0 ? parsed : S.fps));
+
+      S.fps = n; $('fps').value = n; $('fpsNum').value = n; refreshTiming(); invalidate();
+
+    }
+
+    $('fps').addEventListener('input', (e) => setFps(e.target.value));
+
+    $('fpsNum').addEventListener('change', (e) => setFps(e.target.value));
+
+    $('count').addEventListener('change', (e) => {
+
+      const n = Math.min(S.cells, Math.max(1, Math.round(Number(e.target.value) || S.count)));
+
+      S.count = n; if (S.idx >= n) S.idx = 0;
+
+      refreshSheetUI(); buildCellMap(); invalidate(); render();
+
+    });
+
+    $('play').addEventListener('click', () => {S.playing = !S.playing; syncPlay();});
+
+    $('scrub').addEventListener('input', (e) => {S.playing = false; S.idx = Number(e.target.value); syncPlay(); render();});
+
+
+
+    /* ---------- export ---------- */
+
+    function invalidate() {
+
+      if (S.resultUrl) URL.revokeObjectURL(S.resultUrl);
+
+      S.result = null; S.resultUrl = null; $('result').hidden = true;
+
+    }
+
+    const fmtSize = (n) => n > 1048576 ? (n / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+
+    function cleanName() {
+
+      let n = $('fileName').value.trim().replace(/[^\w.\- ]+/g, '').replace(/\.webp$/i, '').trim();
+
+      return (n || 'sprite-loop') + '.webp';
+
+    }
+
+    async function build() {
+
+      if (S.busy || !S.sheet) return;
+
+      S.busy = true; invalidate();
+
+      const btn = $('build'), prog = $('prog');
+
+      btn.disabled = true; prog.hidden = false; prog.value = 0; note('buildMsg', '', false);
+
+      try {
+
+        const q = parseFloat($('quality').value);
+
+        const tmp = document.createElement('canvas'); tmp.width = tmp.height = FRAME;
+
+        const tctx = tmp.getContext('2d');
+
+        const parts = [];
+
+        for (let i = 0; i < S.count; i++) {
+
+          paintFrame(tctx, i, S.showOverlay);
+
+          const blob = await new Promise((r) => tmp.toBlob(r, 'image/webp', q));
+
+          if (!blob || blob.type !== 'image/webp') throw new Error('This browser cannot encode WebP. Open the page in Chrome, Edge or Firefox.');
+
+          parts.push(new Uint8Array(await blob.arrayBuffer()));
+
+          prog.value = (i + 1) / S.count;
+
+          note('buildMsg', 'Encoding frame ' + (i + 1) + ' of ' + S.count, true);
+
+          await new Promise((r) => setTimeout(r, 0));
+
+        }
+
+        const bytes = muxAnimatedWebP(parts, {width: FRAME, height: FRAME, duration: durMs(), loops: 0});
+
+        S.result = new Blob([bytes], {type: 'image/webp'});
+
+        S.resultUrl = URL.createObjectURL(S.result);
+
+        $('outImg').src = S.resultUrl;
+
+        $('outName').textContent = cleanName();
+
+        $('outStats').textContent = S.count + ' frames · ' + durMs() + ' ms each · ' + fmtSize(S.result.size);
+
+        note('saveMsg', '', false);
+
+        $('result').hidden = false;
+
+        note('buildMsg', 'Done. Check the preview, then save the file.', true);
+
+        $('buildMsg').className = 'note ok';
+
+      } catch (e) {
+
+        note('buildMsg', e.message || 'The export failed.', true);
+
+        $('buildMsg').className = 'note err';
+
+      } finally {
+
+        S.busy = false; btn.disabled = false; prog.hidden = true;
+
+      }
+
+    }
+
+    $('build').addEventListener('click', build);
+
+    $('resetDefaults').addEventListener('click', () => {
+      setFps(14.29);
+      $('quality').value = '0.98';
+      $('fileName').value = 'sprite-loop.webp';
+      S.nameTouched = false;
+      S.showOverlay = true;
+      $('showOverlay').checked = true;
+      invalidate();
+      render();
+      note('buildMsg', 'Settings reset to defaults. Your loaded images were kept.', true);
+      $('buildMsg').className = 'note ok';
+    });
+
+
+
+
+    $('save').addEventListener('click', () => {
+      if (!S.result || !S.resultUrl) {
+        const el = $('saveMsg');
+        el.textContent = 'Build the animated WebP before saving.';
+        el.className = 'note warn';
+        el.hidden = false;
+        return;
+      }
+
+      // A standard anchor download works in regular browsers without host-specific APIs.
+      const link = document.createElement('a');
+      link.href = S.resultUrl;
+      link.download = cleanName();
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      const el = $('saveMsg');
+      el.textContent = 'Download started: ' + cleanName();
+      el.className = 'note ok';
+      el.hidden = false;
+    });
+
+    /* ---------- start with samples so the tool opens in a working state ---------- */
+
+    setFps(14.29);
+
+    setSheet(sampleSheet(), 'Sample sprite sheet', true);
+
+    setOverlay(sampleOverlay(), 'Sample overlay', true);
+
+    syncPlay();
+
+    requestAnimationFrame(tick);
+
+  })();
+
+</script>
