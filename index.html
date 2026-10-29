@@ -645,14 +645,6 @@
         <p class="hint">Every frame is 256 × 256. Cells are read left to right, then top to bottom. Empty cells at the
           end are skipped.</p>
 
-        <div class="field">
-
-          <label for="count">Frames to use</label>
-
-          <input type="number" id="count" min="1" max="45" value="45" inputmode="numeric">
-
-        </div>
-
       </div>
 
 
@@ -1056,7 +1048,7 @@
 
       if (last < 0) throw new Error('Every cell in that sheet is transparent.');
 
-      const framesToUse = Math.min(45, cols * rows);
+      const framesToUse = 45
 
       Object.assign(S, {
         sheet: c,
@@ -1091,8 +1083,6 @@
       const off = S.sheetDims[0] % FRAME || S.sheetDims[1] % FRAME;
 
       note('sheetWarn', off ? 'The sheet is not an exact multiple of 256 px. Pixels past the last full cell are ignored.' : '', true);
-
-      const cnt = $('count'); cnt.max = Math.min(45, S.cells); cnt.value = Math.min(45, S.count);
 
       const sc = $('scrub'); sc.max = Math.max(0, S.count - 1);
 
@@ -1268,16 +1258,6 @@
     $('fps').addEventListener('input', (e) => setFps(e.target.value));
 
     $('fpsNum').addEventListener('change', (e) => setFps(e.target.value));
-
-    $('count').addEventListener('change', (e) => {
-
-      const n = Math.min(S.cells, Math.max(1, Math.round(Number(e.target.value) || S.count)));
-
-      S.count = n; if (S.idx >= n) S.idx = 0;
-
-      refreshSheetUI(); buildCellMap(); invalidate(); render();
-
-    });
 
     $('play').addEventListener('click', () => {S.playing = !S.playing; syncPlay();});
 
